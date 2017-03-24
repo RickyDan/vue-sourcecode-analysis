@@ -42,5 +42,5 @@ export function _toString (val: any): string {
   export function toNumber (val: string): number | string {}
 ```
  _toString函数表示接受一个任意数据类型的参数并返回一个string，  _toNumber函数表示接收一个string类型的参数并返回一个number或者string，
- 详细文档可以自行查阅 docs https://flowtype.org/
+ 详细文档可以自行查阅 https://flowtype.org/
  
