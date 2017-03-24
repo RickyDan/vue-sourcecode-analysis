@@ -67,4 +67,37 @@ export function makeMap (
 ```
 makeMap方法接收两个参数，第一个参数是字符串, 第二个参数是布尔值，返回值是一个函数，该函数的作用是用来检测传入的key值是否存在于map对象中
 
+```js
+export const isBuiltInTag = makeMap('slot,component', true)
+```
+makeMap返回一个匿名函数，所以isBuiltInTag是一个检测是否是内置tag的一个方法
+
+```js
+/**
+ * Remove an item from an array
+ */
+export function remove (arr: Array<any>, item: any): Array<any> | void {
+  if (arr.length) {
+    const index = arr.indexOf(item)
+    if (index > -1) {
+      return arr.splice(index, 1)
+    }
+  }
+}
+```
+remove方法很简单，接收两个参数，第一个参数是数组，第二个是任意值，返回值可能是数组或者是undefined, 如果传入的item是数组中的元素，则将item从该数组中删除
+
+```js
+const hasOwnProperty = Object.prototype.hasOwnProperty
+export function hasOwn (obj: Object, key: string): boolean {
+  return hasOwnProperty.call(obj, key)
+}
+```
+ 这个hasOwn方法用于检查对象上的属性是对象本身的还是继承自原型的
  
+ ```js
+ export function isPrimitive (value: any): boolean {
+  return typeof value === 'string' || typeof value === 'number'
+}
+```
+isPrimitive方法是检查一个值是否是数字还是字符串
