@@ -14,8 +14,7 @@
 ```
 
 vue2.0的源码目录组织结构如上所示
-首先基于shared目录讲解
-share 目录的结构如下：
+首先分析shared目录下的模块：
 ```
   └── shared
      └── util.js
@@ -43,4 +42,29 @@ export function _toString (val: any): string {
 ```
  _toString函数表示接受一个任意数据类型的参数并返回一个string，  _toNumber函数表示接收一个string类型的参数并返回一个number或者string，
  详细文档可以自行查阅 https://flowtype.org/
+ ```js
+export function toNumber (val: string): number | string {
+  const n = parseFloat(val)
+  return isNaN(n) ? val : n
+}
+```
+toNumber方法接收一个字符串并将其转化成number并返回转化后的数字，如果不能转换，则返回字符串本身
+
+```js
+export function makeMap (
+  str: string,
+  expectsLowerCase?: boolean
+): (key: string) => true | void {
+  const map = Object.create(null)
+  const list: Array<string> = str.split(',')
+  for (let i = 0; i < list.length; i++) {
+    map[list[i]] = true
+  }
+  return expectsLowerCase
+    ? val => map[val.toLowerCase()]
+    : val => map[val]
+}
+```
+makeMap方法接收两个参数，第一个参数是字符串, 第二个参数是布尔值，返回值是一个函数，该函数的作用是用来检测传入的key值是否存在于map对象中
+
  
