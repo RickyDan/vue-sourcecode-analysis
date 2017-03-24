@@ -36,7 +36,7 @@ export function _toString (val: any): string {
 ```
  _toString方法接受一个任意类型的参数并返回一个string类型，如果参数是 null 则返回空字符串, 如果是参数是对象则使用JSON.stringify()方法将其序例化输出，
  其他类型则直接使用String构造函数将其转化成字符串
-####  /* @flow */ 该注释是每个vue源文件的都有声明的，vue2.0是使用fackbook开源的一个js类型检查工具flow作为数据类型检查的，所以vue源码里会有非常多类似于
+####  /* @flow */ 该注释是每个vue源文件的都有声明的，vue2.0是使用fackbook开源的一个js类型检查工具flow作为数据类型检查的，所以vue源码里会有非常多类似于下面这种代码
 ```js
   epxort function _toString (val: any): string {}
   export function toNumber (val: string): number | string {}
