@@ -123,3 +123,13 @@ export const camelize = cached((str: string): string => {
 })
 ```
 camelize方法是将"learn-vue"这种类型的字符串转化成驼峰类型的字符串"learnVue"
+
+```js
+/**
+ * Capitalize a string.
+ */
+export const capitalize = cached((str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+})
+```
+capitalize方法是将字符串的首字母转化成大写
