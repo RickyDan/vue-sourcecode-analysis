@@ -112,3 +112,14 @@ export function cached<F: Function> (fn: F): F {
 }
 ```
 cache方法作用是缓存一个纯函数的执行结果，该方法接收一个函数(纯函数)作为参数，并返回一个匿名函数，该匿名函数缓存了函数参数的执行结果。纯函数是指只要输入相同输出就一定相同，没有任何副作用（改变外界状态）的函数。纯函数是函数式编程的一个重要概念。有关纯函数和函数式编程的相关概念可以自行google。Redux里的reducer就是函数式编程的极致体现。
+
+```js
+/**
+ * Camelize a hyphen-delimited string.
+ */
+const camelizeRE = /-(\w)/g
+export const camelize = cached((str: string): string => {
+  return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : '')
+})
+```
+camelize方法是将"learn-vue"这种类型的字符串转化成驼峰类型的字符串"learnVue"
