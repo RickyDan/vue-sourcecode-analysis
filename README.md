@@ -101,3 +101,14 @@ export function hasOwn (obj: Object, key: string): boolean {
 }
 ```
 isPrimitive方法是检查一个值是否是数字还是字符串
+
+```js
+export function cached<F: Function> (fn: F): F {
+  const cache = Object.create(null)
+  return (function cachedFn (str: string) {
+    const hit = cache[str]
+    return hit || (cache[str] = fn(str))
+  }: any)
+}
+```
+cache方法作用是缓存一个纯函数的执行结果，该方法接收一个函数(纯函数)作为参数，并返回一个匿名函数，该匿名函数缓存了函数参数的执行结果。纯函数是指只要输入相同输出就一定相同，没有任何副作用（改变外界状态）的函数。纯函数是函数式编程的一个重要概念。有关纯函数和函数式编程的相关概念可以自行google。Redux里的reducer就是函数式编程的极致体现。
