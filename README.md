@@ -133,3 +133,17 @@ export const capitalize = cached((str: string): string => {
 })
 ```
 capitalize方法是将字符串的首字母转化成大写
+
+```js
+/**
+ * Hyphenate a camelCase string.
+ */
+const hyphenateRE = /([^-])([A-Z])/g
+export const hyphenate = cached((str: string): string => {
+  return str
+    .replace(hyphenateRE, '$1-$2')
+    .replace(hyphenateRE, '$1-$2')
+    .toLowerCase()
+})
+```
+hyphenate方法用于将驼峰类型的字符串转化成连字符类型的字符串并将大写形式转化成小写
