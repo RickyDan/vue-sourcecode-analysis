@@ -261,6 +261,17 @@ export function looseEqual (a: mixed, b: mixed): boolean {
 }
 ```
 looseEqual方法用于比较两个值是否相等，如果相等返回true，否则返回false
+
+```js
+export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
+  for (let i = 0; i < arr.length; i++) {
+    if (looseEqual(arr[i], val)) return i
+  }
+  return -1
+}
+```
+looseIndexOf方法的作用是给定一个数组和一个特定的值，如果数组中元素与该值相等，则返回该元素对应的下标，若数组中不存在给定的值，则返回-1
+
 ```js
 /**
  * Ensure a function is called only once.
