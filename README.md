@@ -238,6 +238,18 @@ noop暴露了一个没有任何操作的空方法, no方法永远返回false, id
 
 ```js
 /**
+ * Generate a static keys string from compiler modules.
+ */
+export function genStaticKeys (modules: Array<ModuleOptions>): string {
+  return modules.reduce((keys, m) => {
+    return keys.concat(m.staticKeys || [])
+  }, []).join(',')
+}
+```
+genStaticKeys方法是返回一个static keys 字符串组成的key值
+
+```js
+/**
  * Check if two values are loosely equal - that is,
  * if they are plain objects, do they have the same shape?
  */
