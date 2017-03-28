@@ -147,3 +147,52 @@ export const hyphenate = cached((str: string): string => {
 })
 ```
 hyphenate方法用于将驼峰类型的字符串转化成连字符类型的字符串并将大写形式转化成小写
+
+```js
+/**
+ * Simple bind, faster than native
+ */
+export function bind (fn: Function, ctx: Object): Function {
+  function boundFn (a) {
+    const l: number = arguments.length
+    return l
+      ? l > 1
+        ? fn.apply(ctx, arguments)
+        : fn.call(ctx, a)
+      : fn.call(ctx)
+  }
+  // record original fn length
+  boundFn._length = fn.length
+  return boundFn
+}
+```
+bind方法重写了原生js上的bind方法，用法与原生bind方法一样
+
+```js
+/**
+ * Convert an Array-like object to a real Array.
+ */
+export function toArray (list: any, start?: number): Array<any> {
+  start = start || 0
+  let i = list.length - start
+  const ret: Array<any> = new Array(i)
+  while (i--) {
+    ret[i] = list[i + start]
+  }
+  return ret
+}
+```
+toArray方法是将类数组对象转化成真正的数组
+
+```js
+/**
+ * Mix properties into target object.
+ */
+export function extend (to: Object, _from: ?Object): Object {
+  for (const key in _from) {
+    to[key] = _from[key]
+  }
+  return to
+}
+```
+extend方法是扩展对象属性的一个方法
