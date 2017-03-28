@@ -196,3 +196,19 @@ export function extend (to: Object, _from: ?Object): Object {
 }
 ```
 extend方法是扩展对象属性的一个方法
+
+```js
+export function isObject (obj: mixed): boolean {
+  return obj !== null && typeof obj === 'object'
+}
+```
+isObject用于判断一个复合数据类型是对象还是其他，如果是不为null并且是Object类型，则返回true, 否则返回false
+
+```js
+const toString = Object.prototype.toString
+const OBJECT_STRING = '[object Object]'
+export function isPlainObject (obj: any): boolean {
+  return toString.call(obj) === OBJECT_STRING
+}
+```
+isPlainObject方法用于判断一个任意类型的数值是否是Object原型链上的对象
