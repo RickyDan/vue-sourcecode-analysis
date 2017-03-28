@@ -212,3 +212,67 @@ export function isPlainObject (obj: any): boolean {
 }
 ```
 isPlainObject方法用于判断一个任意类型的数值是否是Object原型链上的对象
+
+```js
+/**
+ * Merge an Array of Objects into a single Object.
+ */
+export function toObject (arr: Array<any>): Object {
+  const res = {}
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i]) {
+      extend(res, arr[i])
+    }
+  }
+  return res
+}
+```
+toObject方法将数组里可迭代的元素添加到一个新的对象里并返回该对象
+
+```js
+export function noop() {}
+export const no = () => false
+export const identity = (_ : any) => _
+``` 
+noop暴露了一个没有任何操作的空方法, no方法永远返回false, identity仅仅将第一个参数返回
+
+```js
+/**
+ * Check if two values are loosely equal - that is,
+ * if they are plain objects, do they have the same shape?
+ */
+export function looseEqual (a: mixed, b: mixed): boolean {
+  const isObjectA = isObject(a)
+  const isObjectB = isObject(b)
+  if (isObjectA && isObjectB) {
+    try {
+      // 不能直接比较两个对象 a === b, 因为两个对象具有独立的内存地址，所以即使两个对象属性完全一致，也不会想等，
+      // 这里是将两个对象JSON序列化之后再比较两个字符串是否相等
+      return JSON.stringify(a) === JSON.stringify(b)
+    } catch (e) {
+      // possible circular reference
+      return a === b
+    }
+  } else if (!isObjectA && !isObjectB) {
+    return String(a) === String(b)
+  } else {
+    return false
+  }
+}
+```
+looseEqual方法用于比较两个值是否相等，如果相等返回true，否则返回false
+```js
+/**
+ * Ensure a function is called only once.
+ */
+export function once (fn: Function): Function {
+  let called = false
+  return () => {
+    if (!called) {
+      called = true
+      fn()
+    }
+  }
+}
+```
+once方法确保一个方法只被调用一次，不能多次重复调用
