@@ -41,7 +41,7 @@ export type Config = {
 };
 ```
 
-flow 不仅可以检测原生js的数据类型，还支持自定义类型，比如 type Config就是一个自定义类型，下面来看Config类型的实现, 可以看到config必须是Config类型的，这就保证了暴露出去的config配置项不会被随意更改。 在config对应的属性注释里我加上的中文注释，应该不难看懂
+flow 不仅可以检测原生js的数据类型，还支持自定义类型，比如 type Config就是一个自定义类型，下面来看Config类型的实现, 可以看到config必须是Config类型的，这就保证了暴露出去的config配置项不会被随意更改。 在config对应的属性注释里我加上了的中文注释，应该不难看懂
 
 ```js
 const config: Config = {
