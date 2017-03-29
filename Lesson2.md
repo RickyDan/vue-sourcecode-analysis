@@ -13,3 +13,30 @@
      └──config.js           基础配置文件
      └──index.js .          将整个core实现的功能模块暴露出去
 ```
+先来看看基础配置文件 config.js
+```js
+/* @flow */
+
+import { no, noop, identity } from 'shared/util'
+export type Config = {
+  // user
+  optionMergeStrategies: { [key: string]: Function };
+  silent: boolean;
+  productionTip: boolean;
+  performance: boolean;
+  devtools: boolean;
+  errorHandler: ?(err: Error, vm: Component, info: string) => void;
+  ignoredElements: Array<string>;
+  keyCodes: { [key: string]: number | Array<number> };
+  // platform
+  isReservedTag: (x?: string) => boolean;
+  parsePlatformTagName: (x: string) => string;
+  isUnknownElement: (x?: string) => boolean;
+  getTagNamespace: (x?: string) => string | void;
+  mustUseProp: (tag: string, type: ?string, name: string) => boolean;
+  // internal
+  _assetTypes: Array<string>;
+  _lifecycleHooks: Array<string>;
+  _maxUpdateCount: number;
+};
+```
