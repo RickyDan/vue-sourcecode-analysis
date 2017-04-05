@@ -23,3 +23,4 @@ debug.js下主要是存放一些在开发模式下输出一些调试信息给开
     return `\n(found in ${str})`
 }
 ```
+formatLocation方法是在Vue开发过程中如果引入了未声明的标签时的报错提示。
