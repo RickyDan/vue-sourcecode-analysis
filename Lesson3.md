@@ -23,4 +23,33 @@ debug.js下主要是存放一些在开发模式下输出一些调试信息给开
     return `\n(found in ${str})`
 }
 ```
-formatLocation方法是在Vue开发过程中如果引入了未声明的标签时的报错提示。
+formatLocation方法是在Vue开发过程中如果引入了未声明的标签时的报错提示信息
+
+
+```js
+formatComponentName = (vm, includeFile) => {
+    if (vm.$root === vm) {
+      return '<Root>'
+    }
+    let name = typeof vm === 'string'
+      ? vm
+      : typeof vm === 'function' && vm.options
+        ? vm.options.name
+        : vm._isVue
+          ? vm.$options.name || vm.$options._componentTag
+          : vm.name
+
+    const file = vm._isVue && vm.$options.__file
+    if (!name && file) {
+      const match = file.match(/([^/\\]+)\.vue$/)
+      name = match && match[1]
+    }
+
+    return (
+      (name ? `<${classify(name)}>` : `<Anonymous>`) +
+      (file && includeFile !== false ? ` at ${file}` : '')
+    )
+  }
+  ```
+  
+  
