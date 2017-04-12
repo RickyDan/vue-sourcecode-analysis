@@ -53,4 +53,4 @@ formatComponentName = (vm, includeFile) => {
   ```
   
 
-formatComponentName是主要为了更
+formatComponentName是调试时候更加友好地输出组件的名称以便开发人员更快的定位到问题组件中的方法
