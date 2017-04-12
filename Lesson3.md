@@ -52,4 +52,5 @@ formatComponentName = (vm, includeFile) => {
   }
   ```
   
-  
+
+formatComponentName是主要为了更
