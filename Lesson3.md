@@ -75,3 +75,24 @@ export const isIOS = UA && /iphone|ipad|ipod|ios/.test(UA)
 export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge
 ```
 这段代码主要是用于检测浏览器环境的，包括各大主流浏览器平台的检测, IE的版本至少要9以上才支持Vue
+
+ Vue2.0版本开始提供服务端渲染的支持，下面的这段代码是用于检测当前的js执行环境是否是在nodejs中, _isServerRendering会返回一个Boolean, 为true表示执行环境在NodeJS中
+ 
+ ```js
+ // this needs to be lazy-evaled because vue may be required before
+// vue-server-renderer can set VUE_ENV
+let _isServer
+export const isServerRendering = () => {
+  if (_isServer === undefined) {
+    /* istanbul ignore if */
+    if (!inBrowser && typeof global !== 'undefined') {
+      // detect presence of vue-server-renderer and avoid
+      // Webpack shimming the process
+      _isServer = global['process'].env.VUE_ENV === 'server'
+    } else {
+      _isServer = false
+    }
+  }
+  return _isServer
+}
+ ```
