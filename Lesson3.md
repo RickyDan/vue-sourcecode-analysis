@@ -54,3 +54,24 @@ formatComponentName = (vm, includeFile) => {
   
 
 formatComponentName是调试时候更加友好地输出组件的名称以便开发人员更快的定位到问题组件中的方法
+
+#### env.js主要是存放一些检测vue开发环境的代码
+
+```js
+import { noop } from 'shared/util'
+import { handleError } from './error'
+
+// can we use __proto__?
+export const hasProto = '__proto__' in {}
+
+// Browser environment sniffing
+export const inBrowser = typeof window !== 'undefined'
+export const UA = inBrowser && window.navigator.userAgent.toLowerCase()
+export const isIE = UA && /msie|trident/.test(UA)
+export const isIE9 = UA && UA.indexOf('msie 9.0') > 0
+export const isEdge = UA && UA.indexOf('edge/') > 0
+export const isAndroid = UA && UA.indexOf('android') > 0
+export const isIOS = UA && /iphone|ipad|ipod|ios/.test(UA)
+export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge
+```
+这段代码主要是用于检测浏览器环境的，包括各大主流浏览器平台的检测, IE的版本至少要9以上才支持Vue
