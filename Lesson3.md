@@ -96,4 +96,149 @@ export const isServerRendering = () => {
   return _isServer
 }
  ```
- 
+
+ 另外在开发模式下为了更好的调试 Vue, 推荐安装一款chrome插件 vue-devtool, 下面这段代码是检测浏览器是否安装了 vue-devtool 插件
+ ```js
+ export const devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
+```
+
+ ```js
+ /* istanbul ignore next */
+export function isNative (Ctor: any): boolean {
+  return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
+```
+isNative函数用于检测一个值是否是 JS 内置的函数, 如果是则返回 true, 否则返回 false
+
+
+```js
+export const hasSymbol =
+  typeof Symbol !== 'undefined' && isNative(Symbol) &&
+  typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys)
+```
+Symbol是ES6新增的一种基本数据类型，Reflect也是ES6新引入为操作对象提供的新的 API
+
+
+```js
+export const nextTick= (function () {
+  const callbacks = []
+  let pending = false
+  let timerFunc
+
+  function nextTickHandler () {
+    pending = false
+    const copies = callbacks.slice(0)
+    callback.length = 0
+    for (let i = 0; i < copies.length; i++) {
+      copies[i]()
+    }
+  }
+
+  if (typeof Promise !== 'undefined' && isNative(Promise)) {
+    var p = Promise.resolve()
+    var logError = err => { console.error(err) }
+    timerFunc = () => {
+      p.then(nextTickHandler).catch(logError)
+      if (iOS) setTimeout(noop)
+    }
+  } else if (typeof MutationObserver !== 'undefined' && (isNative(MutationObserver) ||
+    MutationObserver.toString() === '[object MutationObserverConstructor]')) {
+      var counter = 1
+      var observer = new MutationObserver(nextTickHandler)
+      var textNode = document.createTextNode(String(counter))
+      observer.observe(textNode, {
+        characterData: true
+      })
+      timerFunc = () => {
+        counter = (counter + 1) % 2
+        textNode.data = String(counter)
+      }
+    } else {
+      timerFunc = () => {
+        setTimeout(nextTickHandler, 0)
+      }
+    }
+
+    return function queueNextTick (cb?: Function, ctx?: Object) {
+      let _resolve
+      callbacks.push(() => {
+        if (cb) {
+          try {
+            cb.call(ctx)
+          } catch (e) {
+            handleError(e, ctx, 'nextTick')
+          }
+        } else if (_resolve) {
+          _resolve(ctx)
+        }
+      })
+      if (!pending) {
+        pending = true
+        timerFunc()
+      }
+      if (!cb && typeof Promise !== 'undefined') {
+        return new Promise((resolve, reject) => {
+          _resolve = resolve
+        })
+      }
+    }
+})()
+```
+
+```js
+let _Set
+/* istanbul ignore if */
+if (typeof Set !== 'undefined' && isNative(Set)) {
+  // use native Set when available.
+  _Set = Set
+} else {
+  // a non-standard Set polyfill that only works with primitive keys.
+  _Set = class Set {
+    set: Object;
+    constructor () {
+      this.set = Object.create(null)
+    }
+    has (key: string | number) {
+      return this.set[key] === true
+    }
+    add (key: string | number) {
+      this.set[key] = true
+    }
+    clear () {
+      this.set = Object.create(null)
+    }
+  }
+}
+
+export { _Set }
+```
+
+Set是 ES6 新增的一种数据结构，类似于数组，但是Set内的值都是唯一的, 没有重复的值，下面这段代码中首先检测环境中是否已经内置了 Set 构造函数，如果存在则将其缓存在变量 _Set中，否则就自己实现一个 Set 类, 这个类暴露了 has、add和 clear方法
+
+
+
+error.js 模块只有一个简单的报错提示方法, 代码如下
+
+```js
+import config from '../config'
+import { warn } from './debug'
+import { inBrowser } from './env'
+
+export function handleError (err, vm, info) {
+  if (config.errorHandler) {
+    config.errorHandler.call(null, err, vm, info)
+  } else {
+    if (process.env.NODE_ENV !== 'production') {
+      warn(`Error in ${info}: "${err.toString()}"`, vm)
+    }
+    /* istanbul ignore else */
+    if (inBrowser && typeof console !== 'undefined') {
+      console.error(err)
+    } else {
+      throw err
+    }
+  }
+}
+```
+
+handleError 方法首先检测 config 模块下是否配置了 errorHandler 处理方法，如果有就直接调用, 否则先检测是否是在生产环境中，生产环境中则用
+warn 方法输出警告信息，如果是在浏览器端渲染并且console模块存在的话则使用console.error() 方法输出错误信息, 否则把错误抛出

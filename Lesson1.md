@@ -299,3 +299,6 @@ export function once (fn: Function): Function {
 }
 ```
 once方法确保一个方法只被调用一次，不能多次重复调用
+
+**如果您觉得还不错, 可以打赏我喝杯咖啡，点个star, 激励我写出更高质量的教程。也欢迎给我提PR**
+!(WechatIMG12.jpeg)
