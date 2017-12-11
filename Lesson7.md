@@ -1,4 +1,8 @@
-# Vue2.0 中的观察者模式
+```
+└── core
+  └── observer
+    └── dep.js
+```
 
 ```js
 import type Watcher from './watcher'

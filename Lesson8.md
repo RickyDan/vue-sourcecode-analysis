@@ -7,6 +7,7 @@
 ```
 
 ```js
+/* flow */
 import { queueWatcher } from './scheduler'
 import Dep, { pushTarget, popTarget } from './dep'
 
@@ -39,7 +40,6 @@ export default class Watcher {
   getter: Function;
   value: any;
 
-  // 构造函数
   constructor (
     vm: Component,
     expOrFn: string | Function,
@@ -76,105 +76,172 @@ export default class Watcher {
       if (!this.getter) {
         this.getter = function () {}
         process.env.NODE_ENV !== 'production' && warn(
-          `Failed watching path: "${expOrFn}" ` + 
+          `Failed watching path: "${expOrFn}" ` +
           'Watcher only accepts simple dot-delimited paths. ' +
           'For full control, use a function instead.',
           vm
         )
       }
     }
-    this.value = this.lazy ? undefined : this.get()
+    this.value = this.lazy
+      ? undefined
+      : this.get()
   }
-}
-```
 
-Watcher 构造函数接收三个必选参数，第一个参数是组件实例，第二个参数为字符串或者，第三个参数是回调函数，第四个可选参数
-可以为空类型或者是对象。
-
-```js
-this.vm = vm
-vm._watchers.push(this)
-// options
-if (options) {
-  this.deep = !!options.deep
-  this.user = !!options.user
-  this.lazy = !!options.lazy
-  this.sync = !!options.sync
-} else {
-  this.deep = this.user = this.lazy = this.sync = false
-}
-```
-把vm赋值给实例属性vm, 然后把Watcher实例对象添加进vm的_watchers数组中。如果传入了options对象，则把options对象的deep、user、lazy和sync属性值赋值给实例对象上对应的属性，如果没有传入该对象，全部赋值为false
-
-```js
-this.cb = cb
-this.id = ++uid // uid for batching
-this.active = true
-this.dirty = this.lazy // for lazy watchers
-this.deps = []
-this.newDeps = []
-this.depIds = new Set()
-this.newDepIds = new Set()
-this.expression = process.env.NODE_ENV !== 'production'
-  ? expOrFn.toString()
-  : ''
-```
-这里depIds和newDepIds都是Set类型的数组，这样就保证了Id的唯一性， expression属性的值如果在开发环境下的值为expOrFn的toString字符输出
-，如果在生产环境则为空字符串
-
-```js
-if (typeof expOrFn === 'function') {
-  this.getter = expOrFn
-} else {
-  this.getter = parsePath(expOrFn)
-  if (!this.getter) {
-    this.getter = function () {}
-    process.env.NODE_ENV !== 'production' && warn(
-      `Failed watching path: "${expOrFn}" ` +
-      'Watcher only accepts simple dot-delimited paths. ' +
-      'For full control, use a function instead.',
-      vm
-    )
+  /* Evaluate the getter, and re-collect dependencies */
+  get () {
+    pushTarget(this)
+    let value
+    const vm = this.vm
+    if (this.user) {
+      try {
+        value = this.getter.call(vm, vm)
+      } catch (e) {
+        handleError(e, vm, `getter for watcher "${this.expression}"`)
+      }
+    } else {
+      value = this.getter.call(vm, vm)
+    }
+    // "touch" every property so they are all tracked as
+    // dependencies for deep watching
+    if (this.deep) {
+      traverse(value)
+    }
+    popTarget()
+    this.cleanDeps()
+    return value
   }
-}
-this.value = this.lazy
-  ? undefined
-  : this.get()
-```
-如果传入的expOrFn是函数，就将它赋值给实例属性getter。如果传入的expOrFn是字符串，就将它传给util模块里的parsePath方法，返回值
-赋值给getter属性，如果parsePath方法返回了undefined, getter属性将重新被赋值为一个空函数。如果是非生产环境下，会调用util模块
-的warn方法在控制台输出警告信息。
-实例属性lazy的值如果为 false, this.value的值会被赋值为undefined, 否则会调用Watcher对象的get方法
 
-
-Watcher实例对象内的方法依赖于以下两个方法
-```js
-const seenObjects = new Set()
-function traverse (val: any) {
-  seenObjects.clear()
-  _traverse(val, seenObjects)
-}
-
-function _traverse (val: any, seen: Set) {
-  let i, keys
-  const isA = Array.isArray(val)
-  if ((!isA && !isObject(val)) || !Object.isExtensible(val)) {
-    return
+  // Add a dependency to this directive
+  addDep (dep: Dep) {
+    const id = dep.id
+    if (!this.new DepIds.has(id)) {
+      this.newDepIds.add(id)
+      this..newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)
+      }
+    }
   }
-  if (val.__ob__) {
-    const depId = val.__ob__.dep.id
-    if (seen.has(depId)) {
+
+  // Clean up for dependency collection
+  cleanupDeps () {
+    let i = this.deps.length
+    while (i--) {
+      const dep = this.deps[i]
+      if (!this.newDepIds.has(dep.id)) {
+        dep.removeSub(this)
+      }
+    }
+    let tmp = this.depIds
+    this.depIds = this.newDepIds
+    this.newDepIds = tmp
+    this.newDepIds.clear()
+    tmp = this.deps
+    this.deps = this.newDeps
+    this.newDeps = tmp
+    this.newDeps.length = 0
+  }
+
+  // Subscriber intergace Will be called when a dependency changes
+  update () {
+    if (this.lazy) {
+      this.dirty = true
+    } else if (this.sync) {
+      this.run()
+    } else {
+      queueWatcher(this)
+    }
+  }
+
+  // Scheduler job interface Will be called by the scheduler
+  run () {
+    if (this.active) {
+      const value = this.get()
+      if (
+        value !== this.value ||
+        // Depp watchers and watchers on Object/Arrays should fire even
+        // When the value is the same, because the value map
+        // have mutated
+        isObject(value) ||
+        this.deep
+      ) {
+        // set the value
+        const oldValue = this.value
+        if (this.user) {
+          try {
+            this.cb.call(this.vm, value, oldValue)
+          } catch (e) {
+            handleError(e, this.vm, `callback for watcher "${this.expression}"`)
+          }
+        } else {
+          this.cb.call(this.vm, value, oldValue)
+        }
+      }
+    }
+  }
+
+  // Evaluate the value of the watcher This only gets called lazy watchers
+  evaluate () {
+    this.value = this.get()
+    this.dirty = false
+  }
+
+  // Depend on all deps collected by this watcher
+  depend () {
+    let i = this.deps.length
+    while (i--) {
+      this.deps[i].depend()
+    }
+  }
+
+  // Remove self from all dependencies' subscriber list
+  teardown () {
+    if (this.active) {
+      // remove self from vm's watcher list
+      // this is a somewhat expensive operation so wo skip it
+      // if the vm is being destroyed
+      if (!this.vm._isBeingDestroyed) {
+        remove(this.vm._watchers, this)
+      }
+      let i = this.deps.length
+      while (i--) {
+        this.deps[i].removeSub(this)
+      }
+      this.active = false
+    }
+  }
+
+  // Recursively traverse an object to evoke all converted
+  // getters, so that every nested property inside the object
+  // is collected as a "deep" dependency
+  const seenObjects = new Set()
+  function traverse (val: any) {
+    seenObjects.clear()
+    _traverse(val, seenObjects)
+  }
+
+  function _traverse (val: any, seen: Set) {
+    let i, key
+    const isA = Array.isArray(val)
+    if ((!isA && !isObject(val)) || !Object.isExtensible(val)) {
       return
     }
-    seen.add(depId)
-  }
-  if (isA) {
-    i = val.length
-    while (i--) _traverse(val[i], seen)
-  } else {
-    keys = Object.keys(val)
-    i = keys.length
-    while (i--) _traverse(val[keys[i]], seen)
+    if (val.__ob__) {
+      const depId = val.__ob__.dep.id
+      if (seen.has(depId)) {
+        return
+      }
+      seen.add(depId)
+    }
+    if (isA) {
+      i = val.length
+      while (i--) _traverse(val[i], seen)
+    } else {
+      keys = Object.keys(val)
+      i = keys.length
+      while (i--) _traverse(val[keys[i]], seen)
+    }
   }
 }
 ```

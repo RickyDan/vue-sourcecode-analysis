@@ -1,104 +1,175 @@
-# Vue2.0 中的观察者模式
+# Vue props 数据是怎么传递到子组件的
 
 ```
 └── core
   └── util
-    └── lang.js
+    └── props.js
 ```
-#### 注意这个文件并没有使用 flow 做类型检测， 因为 flow 对于 Array.prototype 属性上的一些接收不定参数的函数支持并不是特别好。
-#### 这个模块主要是重写和封装了一些 Array prototype 上的方法。
 
 
 ```js
-const arrayProto = Array.prototype
-export arrayMethods = Object.create(arrayProto)
+import { hasOwn, isObject, isPlainObject, capitalize, hyphenate } from 'shared/util'
+import { observe, observerState } from '../observer/index'
+import { warn } from './debug'
 ```
-首先缓存 Array 原型的一个副本， 然后创建一个空对象， 该对象的原型即是 Array 的原型， 然后将该对象暴露出去
 
 
 ```js
-import { def } from '../util/index'
-[
-  'push',
-  'pop',
-  'shift',
-  'unshift',
-  'splice',
-  'sort',
-  'reverse'
-]
-.forEach(function (method) {
-  // cache original method
-  const original = arrayProto[method]
-  // def 方法在这里被调用
-  def(arrayMethods, method, function mutator () {
-    // avoid leaking arguments:
-    // http://jsperf.com/closure-with-arguments
-    let i = arguments.length
-    const args = new Array(i)
-    while (i--) {
-      args[i] = arguments[i]
-    }
-    const result = original.apply(this, args)
-    const ob = this.__ob__
-    let inserted
-    switch (method) {
-      case 'push':
-        inserted = args
-        break
-      case 'unshift':
-        inserted = args
-        break
-      case 'splice':
-        inserted = args.slice(2)
-        break
-    }
-    if (inserted) ob.observeArray(inserted)
-    // notify change
-    ob.dep.notify()
-    return result
-  })
-})
-```
-这里引入了 util 目录下定义的 def 方法，该方法正是基于 Object.defineProperty的封装。首先遍历定义好的字符串
-数组，遍历过程中使用 original 变量缓存 Array 原型上对应的方法。跟着调用 def 去定义  arrayMethods 这个对象
-上的属性，属性名称是字符串数组的子元素，属性值为一个匿名函数。
-
-```js
-let i = arguments.length
-const args = new Array(i)
-while (i--) {
-  args[i] = arguments[i]
+type PropOptions = {
+  type: Function | Array<Function> | null,
+  default: any,
+  required: ?boolean,
+  validator: ?Function
 }
-const result = original.apply(this, args)
-```
-当 arrayMethods 对象上的方法被调用时，首先将传入的参数缓存到一个args数组中，最后把调用对象和参数传入原生 Array 
-原型上对应的方法, 把结果缓存起来 (result 变量)
 
-```js
-const ob = this.__ob__
-let inserted
-switch (method) {
-  case 'push':
-    inserted = args
-    break
-  case 'unshift':
-    inserted = args
-    break
-  case 'splice':
-    inserted = args.slice(2)
-    break
+// 获取函数名的函数
+function getType (fn) {
+  const match = fn && fn.toString().match(/^\s*function (\w+)/)
+  return match && match[1]
 }
-if (inserted) ob.observeArray(inserted)
-// notify change
-ob.dep.notify()
-return result
+
+// 判断两个函数是否同名
+function isType (type, fn) {
+  if (!Array.isArray(fn)) {
+    return getType(fn) === getType(type)
+  }
+  for (let i = 0, len = fn.length; i < len; i++) {
+    if (getType(fn[i]) === getType(type)) {
+      return true
+    }
+  }
+  return false
+}
+
+export function validateProp (
+  key: string,
+  propOptions: Object,
+  propsData: Object,
+  vm?: Component
+): any {
+  const prop = propOptions[key]
+  const absent = !hasOwn(propsData, key)
+  let value = propsData[key]
+  if (isType(Boolean, prop.type)) {
+    if (absent && !hasOwn(prop, 'default')) {
+      value = false
+    } else if (!isType(String, prop.type) && (value === '' || value === hyphenate(key))) {
+      value = true
+    }
+  }
+  // check default value
+  if (value === undefined) {
+    value = getPropDefaultValue(vm, prop, key)
+    // since the default value is a fresh copy
+    // make sure to observe it
+    const prevShouldConvert = observerState.shouldConvert
+    observerState.shouldConvert = true
+    observe(value)
+    observerState.shouConvert = prevShouldConvert
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    assertProp(prop, key, value, vm, absent)
+  }
+  return value
+}
+
+// get the default value of prop
+function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
+  // no default, return undefined
+  if (!hasOwn(prop, 'default')) {
+    return undefined
+  }
+  const def = prop.default
+  // warn against non-facotry defaults for Object & Array
+  if (process.env.NODE_ENV !== 'production' && isObject(key)) {
+    warn(
+      'Invalid default value for prop "' + key + '": ' +
+      'Props with type Object/Array must use a factory function ' +
+      'to return the default value.',
+      vm
+    )
+  }
+  // the raw prop value was also undefined from previous render
+  // return previous default value to avoid unnecessary watcher trigger
+  if (vm && vm.$options.propsData && vm.$options.propsData[key] === undefined && vm._props[key] !== undefined) {
+    return vm._props[key]
+  }
+  return typeof def === 'function' && getType(prop.type) !== 'Function' ? def.call(vm) : def
+}
+
+// Assert whether a prop is valid
+function assertProp (
+  prop: PropOptions,
+  name: string,
+  value: any,
+  vm: ?Component,
+  absent: boolean
+) {
+  if (prop.required && absent) {
+    warn(
+      'Missing required prop: "' + name + '"',
+      vm
+    )
+    return
+  }
+  if (value === null && !prop.required) {
+    return
+  }
+  let type = prop.type
+  let valid = !type || type === true
+  const expectedTypes = []
+  if (type) {
+    if (!Array.isArray(type)) {
+      type = [type]
+    }
+    for (let i = 0; i < type.length && !valid; i++) {
+      const assertedType = assertType(value, type[i])
+      expectedTypes.push(assertedType.expectedType || '')
+      valid = assertedType.valid
+    }
+  }
+  if (!valid) {
+    warn(
+      'Invalid prop: type check failed for prop "' + name + '".' +
+      ' Expected ' + expectedTypes.map(capitalize).join(', ') +
+      ', got ' + Object.prototype.toString.call(value).slice(8, -1) + '.',
+      vm
+    )
+    return
+  }
+  const validator = prop.validator
+  if (validator) {
+    if (!validator) {
+      warn(
+        'Invalid prop: custom validator check failed for prop "' + name '".',
+        vm
+      )
+    }
+  }
+}
+
+function assertType (value: any, type: Function): {
+  valid: boolean,
+  expectedType: ?string
+} {
+  let valid
+  let expectedType = getType(type)
+  if (expectedType === 'String') {
+    valid = typeof value === (expectedType = 'string')
+  } else if (expectedType === 'Number') {
+    valid = typeof value === (expectedType = 'boolean')
+  } else if (expectedType === 'Function') {
+    valid = typeof value === (expectedType = 'function')
+  } else if (expectedType === 'Object') {
+    valid = isPlainObject(value)
+  } else if (expectedType === 'Array') {
+    valid = Array.isArray(value)
+  } else {
+    valid = value instanceof type
+  }
+  return {
+    valid,
+    expectedType
+  }
+}
 ```
-
-这里的 this 应该是指向 观察者对象, __ob__ 是该对象的一个属性。如果调用的是push、unshift或者splice方法，则将args数组
-传入 this.__ob__ 上的observeArray 方法中, 然后调用 this.__ob__ 对象上的 dep.notify 方法把变更告知观察者, 最后将
-结果(result变量) 返回
-
-观察者模式是常用的设计模式，其主要作用是将业务逻辑通过事件订阅发布的方式解耦，对于处理某一个对象状态变更后其他对象
-需要更新相应的状态的情况下非常实用。 另外作者在这个模块里多次使用了变量去缓存原生对象上的属性和方法 (arrayProto 和 original),
-这样做的好处是能够在不破坏原生对象上方法的同时又可以扩展自己所需的方法。

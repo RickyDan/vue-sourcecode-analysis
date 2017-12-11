@@ -41,7 +41,7 @@ export type Config = {
 };
 ```
 
-flow 不仅可以检测原生js的数据类型，还支持自定义类型，比如 type Config就是一个自定义类型，下面来看Config类型的实现, 可以看到config必须是Config类型的，这就保证了暴露出去的config配置项不会被随意更改。 在config对应的属性注释里我加上了的中文注释，应该不难看懂
+flow 不仅可以检测原生js的数据类型，还支持自定义类型，比如 type Config就是一个自定义类型，下面来看Config类型的实现, 可以看到config必须是Config类型的，这就保证了暴露出去的config配置项不会被随意更改
 
 ```js
 const config: Config = {
@@ -116,7 +116,7 @@ const config: Config = {
 
   /**
    * Parse the real tag name for the specific platform.
-   * 在特定的平台下解析一个标签的名称
+   * 在特定的平台下解析一个标签的名称 (web weex)
    */
   parsePlatformTagName: identity,
 
@@ -156,7 +156,7 @@ const config: Config = {
 
   /**
    * Max circular updates allowed in a scheduler flush cycle.
-   * 一个生命周期内允许的最大更新数
+   * 一个生命周期内允许的最大循环更新限制，不超过 100 次
   */
   _maxUpdateCount: 100
 }

@@ -1,5 +1,5 @@
 # vue-sourcecode-analysis
-## 基于Vue2.0的源码解读
+## 基于Vue2.2.5的源码解读
 
 ### 目录架构
 ```
@@ -18,15 +18,13 @@ vue2.0的源码目录组织结构如上所示
 ```
   └── shared
      └── util.js
+     └── constants.js
 ```
 util.js 里定义和重写了一些基础方法
 ```js
  /* @flow */
-/**
- * Convert a value to a string that is actually rendered.
- */
 export function _toString (val: any): string {
-  return val == null
+  return val === null
     ? ''
     : typeof val === 'object'
       ? JSON.stringify(val, null, 2)
@@ -35,6 +33,7 @@ export function _toString (val: any): string {
 ```
  _toString方法接受一个任意类型的参数并返回一个string类型，如果参数是 null 则返回空字符串, 如果是参数是对象则使用JSON.stringify()方法将其序例化输出，
  其他类型则直接使用String构造函数将其转化成字符串
+
 ####  /* @flow */ 该注释是每个vue源文件的都有声明的，vue2.0是使用fackbook开源的一个js类型检查工具flow作为数据类型检查的，所以vue源码里会有非常多类似于下面这种代码
 ```js
   epxort function _toString (val: any): string {}
@@ -42,6 +41,7 @@ export function _toString (val: any): string {
 ```
  _toString函数表示接受一个任意数据类型的参数并返回一个string，  _toNumber函数表示接收一个string类型的参数并返回一个number或者string，
  详细文档可以自行查阅 https://flowtype.org/
+
  ```js
 export function toNumber (val: string): number | string {
   const n = parseFloat(val)
@@ -49,6 +49,7 @@ export function toNumber (val: string): number | string {
 }
 ```
 toNumber方法接收一个字符串并将其转化成number并返回转化后的数字，如果不能转换，则返回字符串本身
+
 
 ```js
 export function makeMap (
@@ -65,12 +66,12 @@ export function makeMap (
     : val => map[val]
 }
 ```
-makeMap方法接收两个参数，第一个参数是字符串, 第二个参数是布尔值，返回值是一个函数，该函数的作用是用来检测传入的key值是否存在于map对象中
+makeMap方法接收两个参数，第一个参数是字符串, 第二个参数是布尔值(用于控制key值是大写还是小写的形式传入)，返回值是一个函数，该函数的作用是用来检测传入的key值是否存在于map对象中
 
 ```js
 export const isBuiltInTag = makeMap('slot,component', true)
 ```
-makeMap返回一个匿名函数，所以isBuiltInTag是一个检测是否是内置tag的一个方法
+makeMap返回一个匿名函数，所以isBuiltInTag是一个检测某个标签名是否是内置标签的一个方法
 
 ```js
 /**
@@ -132,7 +133,7 @@ export const capitalize = cached((str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 })
 ```
-capitalize方法是将字符串的首字母转化成大写
+capitalize方法是将字符串的首字母转化成大写的形式
 
 ```js
 /**
@@ -211,8 +212,7 @@ export function isPlainObject (obj: any): boolean {
   return toString.call(obj) === OBJECT_STRING
 }
 ```
-isPlainObject方法用于判断一个任意类型的数值是否是Object原型链上的对象
-
+isPlainObject方法用于判断一个任意类型的数值是否是Object对象
 ```js
 /**
  * Merge an Array of Objects into a single Object.
@@ -227,7 +227,7 @@ export function toObject (arr: Array<any>): Object {
   return res
 }
 ```
-toObject方法将数组里可迭代的元素添加到一个新的对象里并返回该对象
+toObject方法会遍历对象数组里的每一个对象，将对象里的属性添加进一个新对象，并返回该对象
 
 ```js
 export function noop() {}
@@ -300,5 +300,4 @@ export function once (fn: Function): Function {
 ```
 once方法确保一个方法只被调用一次，不能多次重复调用
 
-**如果您觉得还不错, 可以打赏我喝杯咖啡，点个star, 激励我写出更高质量的教程。也欢迎给我提PR**
-![wechat](WechatIMG12.jpeg)
+**如果您觉得还不错，点个star, 激励我写出更高质量的教程。也欢迎给我提PR**

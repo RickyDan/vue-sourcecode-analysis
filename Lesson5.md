@@ -37,6 +37,7 @@ def 方法是Vue 实现 MVVM 的核心方法。该方法接收一个对象，一
 
 
 ```js
+// 求值函数
 const bailRE = /[^\w.$]/
 export function parsePath (path: string): any {
   if (bailRE.test(path)) {
