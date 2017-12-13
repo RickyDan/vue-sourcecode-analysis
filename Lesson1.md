@@ -71,7 +71,7 @@ makeMap方法接收两个参数，第一个参数是字符串, 第二个参数�
 ```js
 export const isBuiltInTag = makeMap('slot,component', true)
 ```
-makeMap返回一个匿名函数，所以isBuiltInTag是一个检测某个标签名是否是内置标签的一个方法
+makeMap返回一个匿名函数，所以isBuiltInTag是一个检测某个标签名是否是内置标签
 
 ```js
 /**
@@ -203,7 +203,7 @@ export function isObject (obj: mixed): boolean {
   return obj !== null && typeof obj === 'object'
 }
 ```
-isObject用于判断一个复合数据类型是对象还是其他，如果是不为null并且是Object类型，则返回true, 否则返回false
+isObject用于判断一个复合数据类型是对象、数组还是其他，如果是不为null并且是Object、Array类型，则返回true, 否则返回false
 
 ```js
 const toString = Object.prototype.toString

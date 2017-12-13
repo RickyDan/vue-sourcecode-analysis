@@ -119,11 +119,15 @@ Symbol是ES6新增的一种基本数据类型，Reflect也是ES6新引入为操�
 
 
 ```js
+// nextTick方法在需要直接操作DOM的情况下，在修改数据后，能够在数据更新到DOM后才执行对应的函数
 export const nextTick= (function () {
+  // 回调函数数组
   const callbacks = []
   let pending = false
   let timerFunc
 
+  // 回调函数的轮询调用， 类似于EventLoop事件机制
+  // nextTickHandler 在DOM节点更新后， 取出回调函数数组中的函数逐一执行
   function nextTickHandler () {
     pending = false
     const copies = callbacks.slice(0)
@@ -133,6 +137,7 @@ export const nextTick= (function () {
     }
   }
 
+  // 如果支持Promise，则优先使用Promise.then 来异步执行nextTickHandler
   if (typeof Promise !== 'undefined' && isNative(Promise)) {
     var p = Promise.resolve()
     var logError = err => { console.error(err) }
@@ -140,6 +145,12 @@ export const nextTick= (function () {
       p.then(nextTickHandler).catch(logError)
       if (iOS) setTimeout(noop)
     }
+  /* 如果不支持Promise, 则检测浏览器是否内置了MutationObserver 这个对象
+  MutationObserver(MO） 的主要作用是可以通过它创建一个观察者对象，这个对象会监
+  听给定的某个DOM元素，并在它的DOM树发生变化时执行到我们提供的回调函数。MO接受一个
+  回调函数作为参数，返回一个observer对象，observer对象的observe方法接收一个DOM
+  元素和一个观察配置对象作为参数。具体的使用方法可以查看 MDN 对应的MutationObserver文档
+  */
   } else if (typeof MutationObserver !== 'undefined' && (isNative(MutationObserver) ||
     MutationObserver.toString() === '[object MutationObserverConstructor]')) {
       var counter = 1
@@ -154,6 +165,7 @@ export const nextTick= (function () {
       }
     } else {
       timerFunc = () => {
+        // setTimeout 方法是在前面两种方法都不支持的情况下才用来异步执行nextTickHandler
         setTimeout(nextTickHandler, 0)
       }
     }
@@ -161,15 +173,8 @@ export const nextTick= (function () {
     return function queueNextTick (cb?: Function, ctx?: Object) {
       let _resolve
       callbacks.push(() => {
-        if (cb) {
-          try {
-            cb.call(ctx)
-          } catch (e) {
-            handleError(e, ctx, 'nextTick')
-          }
-        } else if (_resolve) {
-          _resolve(ctx)
-        }
+        if (cb) cb.call(ctx)
+        if (_resolve) _resolve(ctx)
       })
       if (!pending) {
         pending = true
