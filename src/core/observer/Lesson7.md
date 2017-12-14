@@ -10,7 +10,9 @@ import { remove } from '../util/index'
 
 let uid = 0
 
+// 通知类
 export default class Dep {
+  // 静态属性 target 指向 watcher 对象
   static target: ? Watcher;
   id: number;
   subs: Array<Watcher>;
@@ -20,10 +22,11 @@ export default class Dep {
     this.subs = []
   }
 
+  // 将 watcher 对象添加进栈
   addSub (sub: Watcher) {
     this.subs.push(sub)
   }
-
+  // 将 watcher 对象移除出栈
   removeSub (sub: Watcher) {
     remove(this.subs, sub)
   }
@@ -34,6 +37,9 @@ export default class Dep {
     }
   }
 
+  /* 当数据发生变更后，通知 Vue 去重新 render 视图的方法
+  通过遍历 watcher 数组，循环调用数组中 watcher 对象的 update 方法
+  */
   notify () {
     const subs = this.subs.slice()
     for (let i = 0, l = subs.length; i < l; i++) {

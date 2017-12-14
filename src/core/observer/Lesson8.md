@@ -23,9 +23,13 @@ import {
 let uid = 0
 
 export default class Watcher {
+  /* 每个组件实例都有相应的 watcher 实例对象，
+  它会在组件渲染的过程中把属性记录为依赖，
+  之后当依赖项的 setter 被调用时，会通知 watcher 重新计算，
+  从而致使它关联的组件得以更新 */
   vm: Component;
   expression: string;
-  cb: Function;
+  cb: Function; // 回调函数
   id: number;
   deep: boolean;
   user: boolean;
@@ -33,10 +37,10 @@ export default class Watcher {
   sync: boolean;
   dirty: boolean;
   active: boolean;
-  deps: Array<Dep>;
-  newDeps: Array<Dep>;
-  depIds: Set;
-  newDepIds: Set;
+  deps: Array<Dep>; // Dep类的实例数组
+  newDeps: Array<Dep>; // Dep类的实例数组
+  depIds: Set; // dep实例id属性的集合
+  newDepIds: Set; // dep实例id属性的集合
   getter: Function;
   value: any;
 
@@ -90,11 +94,13 @@ export default class Watcher {
 
   /* Evaluate the getter, and re-collect dependencies */
   get () {
+    // 将 watcher 对象添加进栈
     pushTarget(this)
     let value
-    const vm = this.vm
+    const vm = this.vm // 指向组件的属性
     if (this.user) {
       try {
+        // 调用 getter 方法去计算出 value 的值
         value = this.getter.call(vm, vm)
       } catch (e) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -107,6 +113,7 @@ export default class Watcher {
     if (this.deep) {
       traverse(value)
     }
+    // 将 watcher 对象移除出栈
     popTarget()
     this.cleanDeps()
     return value
@@ -115,9 +122,9 @@ export default class Watcher {
   // Add a dependency to this directive
   addDep (dep: Dep) {
     const id = dep.id
-    if (!this.new DepIds.has(id)) {
+    if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
-      this..newDeps.push(dep)
+      this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
         dep.addSub(this)
       }
@@ -216,28 +223,34 @@ export default class Watcher {
   // getters, so that every nested property inside the object
   // is collected as a "deep" dependency
   const seenObjects = new Set()
+  // 接收一个任意类型的值，调用集合的 clear() 方法，保证传入 _traverse 方法的是一个空集
   function traverse (val: any) {
     seenObjects.clear()
     _traverse(val, seenObjects)
   }
-
+  // _traverse 接收一个任意类型的数值和一个集合类型
   function _traverse (val: any, seen: Set) {
     let i, key
     const isA = Array.isArray(val)
+    // 如果传入的 val 不是数组也不是对象或者是一个不可扩展的对象，直接return
     if ((!isA && !isObject(val)) || !Object.isExtensible(val)) {
       return
     }
     if (val.__ob__) {
+      // 如果 __ob__ 属性存在，则val.__ob__.dep.id 的值提取出来
       const depId = val.__ob__.dep.id
+      // 判断 seen 集合中是否已经存在相同的 depId，如果存在则直接返回，否则把 depId 添加进 seen 集合中
       if (seen.has(depId)) {
         return
       }
       seen.add(depId)
     }
     if (isA) {
+      // 如果val是数组，遍历该数组，对数组中的每一个元素递归调用 _traverse 自身
       i = val.length
       while (i--) _traverse(val[i], seen)
     } else {
+      // 如果 val 是对象，遍历该对象，对对象中的每一个属性递归调用 _traverse 自身
       keys = Object.keys(val)
       i = keys.length
       while (i--) _traverse(val[keys[i]], seen)
